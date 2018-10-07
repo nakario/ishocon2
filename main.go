@@ -174,23 +174,23 @@ func postForm(c *gin.Context,key string) string {
 func PostVote(c *gin.Context) {
 	c.Request.ParseForm()
 	user, userErr := getUser(postForm(c,"name"), postForm(c,"address"), postForm(c,"mynumber"))
-	candidate, cndErr := getCandidateByName(c.PostForm("candidate"))
+	candidate, cndErr := getCandidateByName(postForm(c,"candidate"))
 	votedCount := getUserVotedCount(user.ID)
-	voteCount, _ := strconv.Atoi(c.PostForm("vote_count"))
+	voteCount, _ := strconv.Atoi(postForm(c,"vote_count"))
 
 	var message string
 	if userErr != nil {
 		message = "個人情報に誤りがあります"
 	} else if user.Votes < voteCount+votedCount {
 		message = "投票数が上限を超えています"
-	} else if c.PostForm("candidate") == "" {
+	} else if postForm(c,"candidate") == "" {
 		message = "候補者を記入してください"
 	} else if cndErr != nil {
 		message = "候補者を正しく記入してください"
-	} else if c.PostForm("keyword") == "" {
+	} else if postForm(c,"keyword") == "" {
 		message = "投票理由を記入してください"
 	} else {
-		createVote(user.ID, candidate.ID, c.PostForm("keyword"), voteCount)
+		createVote(user.ID, candidate.ID, postForm(c,"keyword"), voteCount)
 		message = "投票に成功しました"
 	}
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
