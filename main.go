@@ -185,10 +185,16 @@ func PostVote(c *gin.Context) {
 		createVote(user.ID, candidate.ID, c.PostForm("keyword"), voteCount)
 		message = "投票に成功しました"
 	}
-	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidatesdom": getAllCandidatesDOM,
-		"message":    message,
-	})
+
+
+	// c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
+	// 	"candidatesdom": getAllCandidatesDOM,
+	// 	"message":    message,
+	// })
+	c.Status(http.StatusOK)
+	writeContentType(c.Writer,[]string{"text/html; charset=utf-8"})
+	// instance.WriteContentType(c.Writer)
+	c.Writer.WriteHeaderNow()
 }
 
 func GetInitialize(c *gin.Context) {
