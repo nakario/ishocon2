@@ -1,5 +1,7 @@
 package main
 
+import "sync/atomic"
+
 // Vote Model
 type Vote struct {
 	ID          int
@@ -8,39 +10,27 @@ type Vote struct {
 	Keyword     string
 }
 
+var voteCounts [30]*int64
+
 func getVoteCountByCandidateID(candidateID int) (count int) {
-	row := db.QueryRow("SELECT SUM(cnt) AS count FROM votes WHERE candidate_id = ?", candidateID)
-	row.Scan(&count)
-	return
+	return int(atomic.LoadInt64(voteCounts[candidateID-1]))
 }
 
 func createVote(userID int, candidateID int, keyword string, cnt int) {
-	db.Exec("INSERT INTO votes (user_id, candidate_id, keyword, cnt) VALUES (?, ?, ?, ?)",
-		userID, candidateID, keyword, cnt)
-	voteCount, _ := VoteCountByCandidateIDMap.Load(candidateID)
-	VoteCountByCandidateIDMap.Store(candidateID, voteCount.(int)+cnt)
+	go func() {
+		db.Exec("INSERT INTO votes (user_id, candidate_id, keyword, cnt) VALUES (?, ?, ?, ?)",
+			userID, candidateID, keyword, cnt)
+	}()
+
+	voteCount := voteCounts[candidateID-1]
+	atomic.AddInt64(voteCount, int64(cnt))
+
+	car := candidateElectionResults[candidateID-1]
+	car.Lock()
+	car.VoteCount += cnt
+	car.Unlock()
 }
 
 func getVoiceOfSupporter(candidateIDs []int) (voices []string) {
-	rows, err := db.Query(`
-    SELECT keyword
-    FROM votes
-    WHERE candidate_id IN (?)
-    GROUP BY keyword
-    ORDER BY SUM(cnt) DESC
-    LIMIT 10`)
-	if err != nil {
-		return nil
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		var keyword string
-		err = rows.Scan(&keyword)
-		if err != nil {
-			panic(err.Error())
-		}
-		voices = append(voices, keyword)
-	}
-	return
+	return []string{}
 }
