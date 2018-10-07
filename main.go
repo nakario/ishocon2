@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
-	"github.com/gin-contrib/pprof"
 	"html/template"
 	"log"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -89,6 +88,10 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
+
+	for i := 1; i <= 30; i++ {
+		VoteCountByCandidateIDMap.Store(i, 0)
+	}
 
 	// session store
 	store := sessions.NewCookieStore([]byte("mysession"))

@@ -1,9 +1,12 @@
 package main
 
 import (
-	"html/template"
 	"errors"
+	"html/template"
+	"sort"
+	"sync"
 )
+
 // Candidate Model
 type Candidate struct {
 	ID             int
@@ -25,6 +28,11 @@ type CandidateElectionResult struct {
 type PartyElectionResult struct {
 	PoliticalParty string
 	VoteCount      int
+}
+
+type CandidateWithVote struct {
+	Candidate
+	VoteCount int
 }
 
 var candidates = []Candidate{
@@ -60,39 +68,42 @@ var candidates = []Candidate{
 	Candidate{30, "伊藤 五郎", "国民元気党", "男"},
 }
 
-
-
+var VoteCountByCandidateIDMap = sync.Map{}
 
 func getInitAllCandidatesDOM() template.HTML {
 	result := ""
-	for _,candidate := range candidates {
+	for _, candidate := range candidates {
 		result += `<option value="` + candidate.Name + `">` + candidate.Name + `</option>`
 	}
 	return template.HTML(result)
 }
+
 var getAllCandidatesDOM = getInitAllCandidatesDOM()
+
 func getCandidate(candidateID int) (c Candidate, err error) {
-	if (candidateID  <= 0 || candidateID >= 30) {
+	if candidateID <= 0 || candidateID >= 30 {
 		err = errors.New("yee")
 	}
-	c = candidates[candidateID - 1]
+	c = candidates[candidateID-1]
 	err = nil
 	return
 }
 
 func initCandidateByNameMap() map[string]Candidate {
 	result := make(map[string]Candidate)
-	for _,candidate := range candidates {
+	for _, candidate := range candidates {
 		result[candidate.Name] = candidate
 	}
 	return result
 }
+
 var candidadeByNameMap = initCandidateByNameMap()
+
 func getCandidateByName(name string) (c Candidate, err error) {
 	c, ok := candidadeByNameMap[name]
 	if !ok {
 		err = errors.New("no candidate")
-	}else {
+	} else {
 		err = nil
 	}
 	return
@@ -126,27 +137,16 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 }
 
 func getElectionResult() (result []CandidateElectionResult) {
-	rows, err := db.Query(`
-		SELECT c.id, c.name, c.political_party, c.sex, IFNULL(v.count, 0)
-		FROM candidates AS c
-		LEFT OUTER JOIN
-		(SELECT candidate_id, SUM(cnt) AS count
-	  	FROM votes
-	  	GROUP BY candidate_id) AS v
-		ON c.id = v.candidate_id
-		ORDER BY v.count DESC`)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer rows.Close()
-
-	for rows.Next() {
+	for _, candidate := range candidates {
 		r := CandidateElectionResult{}
-		err = rows.Scan(&r.ID, &r.Name, &r.PoliticalParty, &r.Sex, &r.VoteCount)
-		if err != nil {
-			panic(err.Error())
-		}
+		r.ID = candidate.ID
+		r.Name = candidate.Name
+		r.PoliticalParty = candidate.PoliticalParty
+		r.Sex = candidate.Sex
+		val, _ := VoteCountByCandidateIDMap.Load(candidate.ID)
+		r.VoteCount = val.(int)
 		result = append(result, r)
 	}
+	sort.Slice(result, func(i, j int) bool { return result[i].VoteCount > result[j].VoteCount })
 	return
 }
