@@ -13,7 +13,7 @@ type User struct {
 	MyNumber string
 	Votes    int
 	Voted    int
-	L        sync.Mutex
+	L        *sync.Mutex
 }
 
 func getUser(name string, address string, myNumber string) (*User, error) {

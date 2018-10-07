@@ -47,7 +47,7 @@ func loadUsers() {
 	for _, record := range records {
 		id, _ := strconv.Atoi(record[0])
 		votes, _ := strconv.Atoi(record[4])
-		usersMap[record[3]] = &User{id, record[1], record[2], record[3], votes, 0, sync.Mutex{}}
+		usersMap[record[3]] = &User{id, record[1], record[2], record[3], votes, 0, new(sync.Mutex)}
 	}
 
 	rows, err := db.Query("SELECT u.mynumber, v.cnt FROM votes AS v INNER JOIN users as u WHERE v.user_id = u.id")
