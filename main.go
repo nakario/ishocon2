@@ -147,16 +147,13 @@ func GetIndex(c *gin.Context) {
 	}
 	// 投票数でソート
 	sort.Slice(partyResults, func(i, j int) bool { return partyResults[i].VoteCount > partyResults[j].VoteCount })
-
-	sexRatio := map[string]int{
-		"men":   0,
-		"women": 0,
-	}
+	ratioMen := 0
+	ratioWomen := 0
 	for _, r := range electionResults {
 		if r.Sex == "男" {
-			sexRatio["men"] += r.VoteCount
+			ratioMen += r.VoteCount
 		} else if r.Sex == "女" {
-			sexRatio["women"] += r.VoteCount
+			ratioWomen += r.VoteCount
 		}
 	}
 
