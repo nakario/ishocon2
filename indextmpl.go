@@ -15,49 +15,51 @@ func WriteIndexHTML(c *gin.Context, candidates []CandidateElectionResult, ratioM
 	c.Status(http.StatusOK)
 	c.Writer.Header()["Content-Type"] = []string{"text/html; charset=utf-8"}
 	c.Writer.Write(code1)
-	dom := ""
+
+	var dom = make([]byte,0,2000)
 	for i,candidate := range candidates {
-		dom += `<div class="col-md-3"><div class="panel panel-default"><div class="panel-heading">`
+		dom = append(dom,`<div class="col-md-3"><div class="panel panel-default"><div class="panel-heading">`...)
 		if i < 10 {
-			dom += `<p>`
-			dom += strconv.Itoa(i + 1)
-			dom += `. <a href="/candidates/`
-			dom += strconv.Itoa(candidate.ID)
-			dom += `">`
-			dom += candidate.Name
-			dom += `</a></p>`
+			dom = append(dom,`<p>`...)
+			dom = append(dom,strconv.Itoa(i + 1)...)
+			dom = append(dom,`. <a href="/candidates/`...)
+			dom = append(dom,strconv.Itoa(candidate.ID)...)
+			dom = append(dom,`">`...)
+			dom = append(dom,candidate.Name...)
+			dom = append(dom,`</a></p>`...)
 		} else {
-			dom += `<p>最下位. <a href="/candidates/`
-			dom += strconv.Itoa(candidate.ID)
-			dom += `">`
-			dom += candidate.Name
-			dom += `</a></p>`
+			dom = append(dom,`<p>最下位. <a href="/candidates/`...)
+			dom = append(dom,strconv.Itoa(candidate.ID)...)
+			dom = append(dom,`">`...)
+			dom = append(dom,candidate.Name...)
+			dom = append(dom,`</a></p>`...)
 		}
-		dom += `</div><div class="panel-body"><p>得票数: `
-		dom += strconv.Itoa(candidate.VoteCount)
-		dom += `</p><p>政党: `
-		dom += candidate.PoliticalParty
-		dom += `</p></div></div></div>`
+		dom = append(dom,`</div><div class="panel-body"><p>得票数: `...)
+		dom = append(dom,strconv.Itoa(candidate.VoteCount)...)
+		dom = append(dom,`</p><p>政党: `...)
+		dom = append(dom,candidate.PoliticalParty...)
+		dom = append(dom,`</p></div></div></div>`...)
 	}
 	c.Writer.Write([]byte(dom))
 	c.Writer.Write(code2)
-  dom = ""
+
+	var dom2 = make([]byte,0,2000)
 	for i,party := range partyResults {
-		dom += `<div class="col-md-3"><div class="panel panel-default"><div class="panel-heading"><p>`
-		dom += strconv.Itoa(i + 1)
-		dom += `. <a href="/political_parties/`
-		dom += party.PoliticalParty
-		dom += `">`
-		dom += party.PoliticalParty
-		dom += `</a></p></div><div class="panel-body"><p>得票数: `
-		dom += strconv.Itoa(party.VoteCount)
-		dom += `</p></div></div></div>`
+		dom2 = append(dom2,`<div class="col-md-3"><div class="panel panel-default"><div class="panel-heading"><p>`...)
+		dom2 = append(dom2,strconv.Itoa(i + 1)...)
+		dom2 = append(dom2,`. <a href="/political_parties/`...)
+		dom2 = append(dom2,party.PoliticalParty...)
+		dom2 = append(dom2,`">`...)
+		dom2 = append(dom2,party.PoliticalParty...)
+		dom2 = append(dom2,`</a></p></div><div class="panel-body"><p>得票数: `...)
+		dom2 = append(dom2,strconv.Itoa(party.VoteCount)...)
+		dom2 = append(dom2,`</p></div></div></div>`...)
 	}
-	c.Writer.Write([]byte(dom))
+	c.Writer.Write(dom2)
 	c.Writer.Write(code3)
-	c.Writer.Write([]byte(strconv.Itoa(ratioMen)))
+	c.Writer.WriteString(strconv.Itoa(ratioMen))
 	c.Writer.Write(code4)
-	c.Writer.Write([]byte(strconv.Itoa(ratioWomen)))
+	c.Writer.WriteString(strconv.Itoa(ratioWomen))
 	c.Writer.Write(code5)
 	c.Writer.WriteHeaderNow()
 }

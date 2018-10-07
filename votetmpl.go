@@ -12,9 +12,9 @@ func WriteVoteHTML(c *gin.Context,message string) {
 	c.Status(http.StatusOK)
 	c.Writer.Header()["Content-Type"] = []string{"text/html; charset=utf-8"}
 	c.Writer.Write(codeA)
-	c.Writer.Write([]byte(getAllCandidatesDOM))
+	c.Writer.WriteString(getAllCandidatesDOM)
 	c.Writer.Write(codeB)
-	c.Writer.Write([]byte(message))
+	c.Writer.WriteString(message)
 	c.Writer.Write(codeC)
 	c.Writer.WriteHeaderNow()
 }
