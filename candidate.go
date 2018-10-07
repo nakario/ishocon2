@@ -144,7 +144,7 @@ func getElectionResult() (result []CandidateElectionResult) {
 		r.PoliticalParty = candidate.PoliticalParty
 		r.Sex = candidate.Sex
 		val, _ := VoteCountByCandidateIDMap.Load(candidate.ID)
-		r.VoteCount = val
+		r.VoteCount = int(val)
 		result = append(result, r)
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].VoteCount > result[j].VoteCount })
