@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"github.com/gin-contrib/pprof"
-	"github.com/gin-gonic/autotls"
-	"golang.org/x/crypto/acme/autocert"
 	"html/template"
 	"log"
 	"net/http"
@@ -120,12 +118,7 @@ func main() {
 
 	r.GET("/initialize", GetInitialize)
 
-	m := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		Cache:      autocert.DirCache("/var/www/.cache"),
-	}
-
-	autotls.RunWithManager(r, &m)
+	r.RunTLS(":443", "/etc/nginx/ssl/server.crt", "/etc/nginx/ssl/server.key")
 }
 
 func GetIndex(c *gin.Context) {
