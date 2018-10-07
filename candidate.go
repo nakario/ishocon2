@@ -1,8 +1,10 @@
 package main
 
 import (
-	"html/template"
 	"errors"
+	"html/template"
+	"sort"
+	"sync"
 )
 // Candidate Model
 type Candidate struct {
@@ -19,6 +21,7 @@ type CandidateElectionResult struct {
 	PoliticalParty string
 	Sex            string
 	VoteCount      int
+	sync.Mutex
 }
 
 // PartyElectionResult type
@@ -27,7 +30,7 @@ type PartyElectionResult struct {
 	VoteCount      int
 }
 
-var candidates = []Candidate{
+var candidates = [30]Candidate{
 	Candidate{1, "佐藤 一郎", "夢実現党", "男"},
 	Candidate{2, "佐藤 次郎", "国民10人大活躍党", "女"},
 	Candidate{3, "佐藤 三郎", "国民10人大活躍党", "女"},
@@ -125,28 +128,14 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 	return
 }
 
-func getElectionResult() (result []CandidateElectionResult) {
-	rows, err := db.Query(`
-		SELECT c.id, c.name, c.political_party, c.sex, IFNULL(v.count, 0)
-		FROM candidates AS c
-		LEFT OUTER JOIN
-		(SELECT candidate_id, SUM(cnt) AS count
-	  	FROM votes
-	  	GROUP BY candidate_id) AS v
-		ON c.id = v.candidate_id
-		ORDER BY v.count DESC`)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer rows.Close()
+var candidateElectionResults [30]*CandidateElectionResult
 
-	for rows.Next() {
-		r := CandidateElectionResult{}
-		err = rows.Scan(&r.ID, &r.Name, &r.PoliticalParty, &r.Sex, &r.VoteCount)
-		if err != nil {
-			panic(err.Error())
-		}
-		result = append(result, r)
+func getElectionResult() (result []CandidateElectionResult) {
+	for _, r := range candidateElectionResults {
+		result = append(result, *r)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].VoteCount > result[j].VoteCount
+	})
 	return
 }

@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
@@ -28,8 +29,21 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func loadUsers() {
-	log.Println("Start loading users")
+func initVotes() {
+	for _, i := range voteCounts {
+		atomic.StoreInt64(i, 0)
+	}
+	for i, c := range candidates {
+		car := &CandidateElectionResult{}
+		car.ID = c.ID
+		car.Name = c.Name
+		car.PoliticalParty = c.PoliticalParty
+		car.Sex = c.Sex
+		candidateElectionResults[i] = car
+	}
+}
+
+func initUsers() {
 	usersMap = make(map[string]*User, 4000000)
 	f, err := os.Open("users.csv")
 	if err != nil {
@@ -49,16 +63,21 @@ func loadUsers() {
 		votes, _ := strconv.Atoi(record[4])
 		usersMap[record[3]] = &User{id, record[1], record[2], record[3], votes, 0, sync.Mutex{}}
 	}
+}
 
-	rows, err := db.Query("SELECT u.mynumber, v.cnt FROM votes AS v INNER JOIN users as u WHERE v.user_id = u.id")
+func loadVotes() {
+	log.Println("Start loading votes")
+
+	rows, err := db.Query("SELECT u.mynumber, v.candidate_id, v.cnt FROM votes AS v INNER JOIN users as u WHERE v.user_id = u.id")
 	if err != nil && err != sql.ErrNoRows {
 		panic(err)
 	}
 
 	for rows.Next() {
 		var myNumber string
+		var candidateID int
 		var cnt int
-		err := rows.Scan(&myNumber, &cnt)
+		err := rows.Scan(&myNumber, &candidateID, &cnt)
 		if err != nil {
 			panic(err)
 		}
@@ -71,11 +90,21 @@ func loadUsers() {
 		// user.Lock()
 		user.Voted += cnt
 		// user.Unlock()
+
+		atomic.AddInt64(voteCounts[candidateID-1], int64(cnt))
+
+		car := candidateElectionResults[candidateID-1]
+		// car.Lock()
+		car.VoteCount += cnt
+		// car.Unlock()
 	}
-	log.Println("Finished loading users")
+	log.Println("Finished loading votes")
 }
 
 func main() {
+	initVotes()
+	initUsers()
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	// database setting
 	user := getEnv("ISHOCON2_DB_USER", "ishocon")
@@ -84,7 +113,7 @@ func main() {
 	db, _ = sql.Open("mysql", user+":"+pass+"@/"+dbname)
 	db.SetMaxIdleConns(5)
 
-	loadUsers()
+	loadVotes()
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -260,6 +289,7 @@ func GetInitialize(c *gin.Context) {
 		u.Voted = 0
 		// u.L.Unlock()
 	}
+	initVotes()
 
 	c.String(http.StatusOK, "Finish")
 }
