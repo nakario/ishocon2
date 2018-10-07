@@ -156,19 +156,21 @@ func GetPoliticalPartyByName(c *gin.Context) {
 }
 
 func GetVote(c *gin.Context) {
-	candidates := getAllCandidate()
+	candidatesDOM := getAllCandidatesDOM()
 
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidates": candidates,
+		"candidatesdom": candidatesDOM,
 		"message":    "",
 	})
 }
+
+
 
 func PostVote(c *gin.Context) {
 	user, userErr := getUser(c.PostForm("name"), c.PostForm("address"), c.PostForm("mynumber"))
 	candidate, cndErr := getCandidateByName(c.PostForm("candidate"))
 	votedCount := getUserVotedCount(user.ID)
-	candidates := getAllCandidate()
+	candidatesDOM := getAllCandidatesDOM()
 	voteCount, _ := strconv.Atoi(c.PostForm("vote_count"))
 
 	var message string
@@ -187,7 +189,7 @@ func PostVote(c *gin.Context) {
 		message = "投票に成功しました"
 	}
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidates": candidates,
+		"candidatesdom": candidatesDOM,
 		"message":    message,
 	})
 }
