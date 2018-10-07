@@ -37,6 +37,10 @@ func main() {
 	r := gin.Default()
 	r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
 
+	for i := 1; i <= 30 {
+		VoteCountByCandidateIDMap.Store(i, 0)
+	}
+
 	// session store
 	store := sessions.NewCookieStore([]byte("mysession"))
 	store.Options(sessions.Options{HttpOnly: true})
