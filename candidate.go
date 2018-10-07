@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"html/template"
+	"sort"
 )
 
 // Candidate Model
@@ -165,6 +166,18 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 	return
 }
 
+func (c CandidateElectionResult) Len() int {
+	return len(c)
+}
+
+func (c CandidateElectionResult) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c CandidateElectionResult) Less(i, j int) bool {
+	return c[i].VoteCount < c[j].VoteCount
+}
+
 func getElectionResult() (result []CandidateElectionResult) {
 	for _, candidate := range candidates {
 		r := CandidateElectionResult{}
@@ -175,6 +188,8 @@ func getElectionResult() (result []CandidateElectionResult) {
 		r.VoteCount = VoteCountByCandidateIDMap[candidate.ID]
 		result = append(result, r)
 	}
+
+	sort.Sort(result)
 
 	return
 }
