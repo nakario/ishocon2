@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"github.com/gin-contrib/pprof"
 	"html/template"
 	"net/http"
 	"os"
@@ -46,6 +47,8 @@ func main() {
 	r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/candidate.tmpl")))
 	r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/political_party.tmpl")))
 	r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/vote.tmpl")))
+
+	pprof.Register(r)
 
 	// GET /
 	r.GET("/", GetIndex)
