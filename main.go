@@ -28,6 +28,7 @@ func getEnv(key, fallback string) string {
 }
 
 func loadUsers() {
+	usersMap = make(map[string]*User, 4000000)
 	f, err := os.Open("users.csv")
 	if err != nil {
 		panic(err)
