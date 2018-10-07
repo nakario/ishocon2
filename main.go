@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-contrib/pprof"
 	"html/template"
 	"net/http"
@@ -36,7 +35,6 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
 	r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
-	layout := "templates/layout.tmpl"
 
 	// session store
 	store := sessions.NewCookieStore([]byte("mysession"))
@@ -44,12 +42,8 @@ func main() {
 	r.Use(sessions.Sessions("showwin_happy", store))
 
 	funcs := template.FuncMap{"indexPlus1": func(i int) int { return i + 1 }}
-	mtr := multitemplate.NewRenderer()
-	mtr.Add("index", template.Must(template.New("main").Funcs(funcs).ParseFiles(layout, "templates/index.tmpl")))
-	mtr.AddFromFiles("candidate", layout, "templates/candidate.tmpl")
-	mtr.AddFromFiles("political_party", layout, "templates/political_party.tmpl")
-	mtr.AddFromFiles("vote", layout, "templates/vote.tmpl")
-	r.HTMLRender = mtr
+	r.SetFuncMap(funcs)
+	r.LoadHTMLGlob("templates/*.tmpl")
 
 	pprof.Register(r)
 
@@ -112,7 +106,7 @@ func GetIndex(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "index", gin.H{
+	c.HTML(http.StatusOK, "templates/index.tmpl", gin.H{
 		"candidates": candidates,
 		"parties":    partyResults,
 		"sexRatio":   sexRatio,
@@ -129,7 +123,7 @@ func GetCandidateByID(c *gin.Context) {
 	candidateIDs := []int{candidateID}
 	keywords := getVoiceOfSupporter(candidateIDs)
 
-	c.HTML(http.StatusOK, "candidate", gin.H{
+	c.HTML(http.StatusOK, "templates.candidate.tmpl", gin.H{
 		"candidate": candidate,
 		"votes":     votes,
 		"keywords":  keywords,
@@ -153,7 +147,7 @@ func GetPoliticalPartyByName(c *gin.Context) {
 	}
 	keywords := getVoiceOfSupporter(candidateIDs)
 
-	c.HTML(http.StatusOK, "political_party", gin.H{
+	c.HTML(http.StatusOK, "templates/political_party.tmpl", gin.H{
 		"politicalParty": partyName,
 		"votes":          votes,
 		"candidates":     candidates,
@@ -164,7 +158,7 @@ func GetPoliticalPartyByName(c *gin.Context) {
 func GetVote(c *gin.Context) {
 	candidates := getAllCandidate()
 
-	c.HTML(http.StatusOK, "vote", gin.H{
+	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
 		"candidates": candidates,
 		"message":    "",
 	})
@@ -194,7 +188,7 @@ func PostVote(c *gin.Context) {
 		}
 		message = "投票に成功しました"
 	}
-	c.HTML(http.StatusOK, "vote", gin.H{
+	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
 		"candidates": candidates,
 		"message":    message,
 	})
