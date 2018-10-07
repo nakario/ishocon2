@@ -166,7 +166,7 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 }
 
 func getElectionResult(votemap map[int]int) (result []CandidateElectionResult) {
-	for candidate := range candidates {
+	for _, candidate := range candidates {
 		r := CandidateElectionResult{}
 		r.ID = candidate.ID
 		r.Name = candidate.Name
