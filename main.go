@@ -11,7 +11,11 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-
+	"io/ioutil"
+	"mime"
+	"net/url"
+	"io"
+	"errors"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -221,9 +225,119 @@ func postForm(c *gin.Context,key string) string {
 	return ""
 }
 
+func copyValues(dst, src url.Values) {
+	for k, vs := range src {
+		for _, value := range vs {
+			dst.Add(k, value)
+		}
+	}
+}
+type maxBytesReader struct {
+	w   http.ResponseWriter
+	r   io.ReadCloser // underlying reader
+	n   int64         // max bytes remaining
+	err error         // sticky error
+}
+func (l *maxBytesReader) Read(p []byte) (n int, err error) {
+	if l.err != nil {
+		return 0, l.err
+	}
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if int64(len(p)) > l.n+1 {
+		p = p[:l.n+1]
+	}
+	n, err = l.r.Read(p)
+	if int64(n) <= l.n {
+		l.n -= int64(n)
+		l.err = err
+		return n, err
+	}
+	n = int(l.n)
+	l.n = 0
+	type requestTooLarger interface {
+		requestTooLarge()
+	}
+	if res, ok := l.w.(requestTooLarger); ok {
+		res.requestTooLarge()
+	}
+	l.err = errors.New("http: request body too large")
+	return n, l.err
+}
+
+func (l *maxBytesReader) Close() error {
+	return l.r.Close()
+}
+
+func parsePostForm(r *http.Request) (vs url.Values, err error) {
+	if r.Body == nil {
+		err = errors.New("missing form body")
+		return
+	}
+	ct := r.Header.Get("Content-Type")
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
+	ct, _, err = mime.ParseMediaType(ct)
+	switch {
+	case ct == "application/x-www-form-urlencoded":
+		var reader io.Reader = r.Body
+		maxFormSize := int64(1<<63 - 1)
+		if _, ok := r.Body.(*maxBytesReader); !ok {
+			maxFormSize = int64(10 << 20) // 10 MB is a lot of text.
+			reader = io.LimitReader(r.Body, maxFormSize+1)
+		}
+		b, e := ioutil.ReadAll(reader)
+		if e != nil {
+			if err == nil {
+				err = e
+			}
+			break
+		}
+		if int64(len(b)) > maxFormSize {
+			err = errors.New("http: POST too large")
+			return
+		}
+		vs, e = url.ParseQuery(string(b))
+		if err == nil {
+			err = e
+		}
+	}
+	return
+}
+func ParseForm(r *http.Request) {
+	if r.PostForm == nil {
+		if r.Method == "POST" || r.Method == "PUT" || r.Method == "PATCH" {
+			r.PostForm, _ = parsePostForm(r)
+		}
+		if r.PostForm == nil {
+			r.PostForm = make(url.Values)
+		}
+	}
+	if r.Form == nil {
+		if len(r.PostForm) > 0 {
+			r.Form = make(url.Values)
+			copyValues(r.Form, r.PostForm)
+		}
+		var newValues url.Values
+		if r.URL != nil {
+			newValues, _ = url.ParseQuery(r.URL.RawQuery)
+		}
+		if newValues == nil {
+			newValues = make(url.Values)
+		}
+		if r.Form == nil {
+			r.Form = newValues
+		} else {
+			copyValues(r.Form, newValues)
+		}
+	}
+}
+
 
 func PostVote(c *gin.Context) {
-	c.Request.ParseForm()
+	ParseForm(c.Request)
 	user, userErr := getUser(postForm(c,"name"), postForm(c,"address"), postForm(c,"mynumber"))
 	candidate, cndErr := getCandidateByName(postForm(c,"candidate"))
 	votedCount := 0
