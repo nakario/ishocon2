@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"github.com/gin-contrib/pprof"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -68,19 +69,23 @@ func initUsers() {
 func loadVotes() {
 	log.Println("Start loading votes")
 
-	rows, err := db.Query("SELECT u.mynumber, v.candidate_id, v.cnt FROM votes AS v INNER JOIN users as u WHERE v.user_id = u.id")
-	if err != nil && err != sql.ErrNoRows {
+	f, err := os.Open(VotesFile)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+
+	records, err := r.ReadAll()
+	if err != nil {
 		panic(err)
 	}
 
-	for rows.Next() {
-		var myNumber string
-		var candidateID int
-		var cnt int
-		err := rows.Scan(&myNumber, &candidateID, &cnt)
-		if err != nil {
-			panic(err)
-		}
+	for _, record := range records {
+		myNumber := record[0]
+		candidateID, _ := strconv.Atoi(record[1])
+		cnt, _ := strconv.Atoi(record[2])
 
 		user, ok := usersMap[myNumber]
 		if !ok {
@@ -98,6 +103,7 @@ func loadVotes() {
 		car.VoteCount += cnt
 		// car.Unlock()
 	}
+
 	log.Println("Finished loading votes")
 }
 
@@ -114,6 +120,7 @@ func main() {
 	db.SetMaxIdleConns(5)
 
 	loadVotes()
+	go voteManager()
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -270,7 +277,7 @@ func PostVote(c *gin.Context) {
 	} else if postForm(c, "keyword") == "" {
 		message = "投票理由を記入してください"
 	} else {
-		createVote(user.ID, candidate.ID, postForm(c, "keyword"), voteCount)
+		createVote(user.MyNumber, candidate.ID, voteCount)
 		user.Voted += voteCount
 		message = "投票に成功しました"
 	}
@@ -278,7 +285,7 @@ func PostVote(c *gin.Context) {
 }
 
 func GetInitialize(c *gin.Context) {
-	db.Exec("DELETE FROM votes")
+	ioutil.WriteFile(VotesFile, []byte{}, 0777)
 	for _, u := range usersMap {
 		// u.L.Lock()
 		u.Voted = 0
