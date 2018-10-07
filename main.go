@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"github.com/gin-contrib/cache"
+	"github.com/gin-contrib/cache/persistence"
 	"github.com/gin-contrib/pprof"
 	"html/template"
 	"io/ioutil"
@@ -13,6 +15,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
@@ -107,6 +110,11 @@ func loadVotes() {
 	log.Println("Finished loading votes")
 }
 
+var indexCache = persistence.NewInMemoryStore(90 * time.Second)
+var	candidateCache = persistence.NewInMemoryStore(90 * time.Second)
+var ppCache = persistence.NewInMemoryStore(90 * time.Second)
+var voteCache = persistence.NewInMemoryStore(90 * time.Second)
+
 func main() {
 	initVotes()
 	initUsers()
@@ -142,16 +150,16 @@ func main() {
 	pprof.Register(r)
 
 	// GET /
-	r.GET("/", GetIndex)
+	r.GET("/", cache.CachePage(indexCache, persistence.DEFAULT, GetIndex))
 
 	// GET /candidates/:candidateID(int)
-	r.GET("/candidates/:candidateID", GetCandidateByID)
+	r.GET("/candidates/:candidateID", cache.CachePage(candidateCache, persistence.DEFAULT, GetCandidateByID))
 
 	// GET /political_parties/:name(string)
-	r.GET("/political_parties/:name", GetPoliticalPartyByName)
+	r.GET("/political_parties/:name", cache.CachePage(ppCache, persistence.DEFAULT, GetPoliticalPartyByName))
 
 	// GET /vote
-	r.GET("/vote", GetVote)
+	r.GET("/vote", cache.CachePage(voteCache, persistence.DEFAULT, GetVote))
 
 	// POST /vote
 	r.POST("/vote", PostVote)
@@ -281,6 +289,9 @@ func PostVote(c *gin.Context) {
 		user.Voted += voteCount
 		message = "投票に成功しました"
 	}
+	indexCache.Delete(cache.CreateKey("/"))
+	candidateCache.Delete(cache.CreateKey("/candidates/" + strconv.Itoa(candidate.ID)))
+	ppCache.Delete(cache.CreateKey("/political_parties/" + candidate.PoliticalParty))
 	WriteVoteHTML(c, message)
 }
 

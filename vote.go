@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"github.com/gin-contrib/cache"
 	"log"
 	"os"
 	"strconv"
@@ -31,6 +32,7 @@ func createVote(myNumber string, candidateID int, cnt int) {
 	voteCount := voteCounts[candidateID-1]
 	atomic.AddInt64(voteCount, int64(cnt))
 
+	indexCache.Delete(cache.CreateKey(""))
 	car := candidateElectionResults[candidateID-1]
 	car.Lock()
 	car.VoteCount += cnt
