@@ -210,10 +210,7 @@ func GetPoliticalPartyByName(c *gin.Context) {
 }
 
 func GetVote(c *gin.Context) {
-	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidatesdom": getAllCandidatesDOM,
-		"message":    "",
-	})
+	WriteVoteHTML(c,"")
 }
 
 
@@ -253,10 +250,7 @@ func PostVote(c *gin.Context) {
 		user.Voted += voteCount
 		message = "投票に成功しました"
 	}
-	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidatesdom": getAllCandidatesDOM,
-		"message":    message,
-	})
+	WriteVoteHTML(c,message)
 }
 
 func GetInitialize(c *gin.Context) {
