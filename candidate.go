@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"html/template"
 	"sort"
 	"sync"
 )
@@ -71,12 +70,12 @@ var candidates = [30]Candidate{
 
 var VoteCountByCandidateIDMap = sync.Map{}
 
-func getInitAllCandidatesDOM() template.HTML {
+func getInitAllCandidatesDOM() string {
 	result := ""
 	for _, candidate := range candidates {
 		result += `<option value="` + candidate.Name + `">` + candidate.Name + `</option>`
 	}
-	return template.HTML(result)
+	return result
 }
 
 var getAllCandidatesDOM = getInitAllCandidatesDOM()
