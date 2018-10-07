@@ -2,12 +2,13 @@ package main
 
 import (
 	"database/sql"
-	"github.com/gin-contrib/pprof"
 	"html/template"
 	"net/http"
 	"os"
 	"sort"
 	"strconv"
+
+	"github.com/gin-contrib/pprof"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
@@ -158,11 +159,9 @@ func GetPoliticalPartyByName(c *gin.Context) {
 func GetVote(c *gin.Context) {
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
 		"candidatesdom": getAllCandidatesDOM,
-		"message":    "",
+		"message":       "",
 	})
 }
-
-
 
 func PostVote(c *gin.Context) {
 	user, userErr := getUser(c.PostForm("name"), c.PostForm("address"), c.PostForm("mynumber"))
@@ -187,7 +186,7 @@ func PostVote(c *gin.Context) {
 	}
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
 		"candidatesdom": getAllCandidatesDOM,
-		"message":    message,
+		"message":       message,
 	})
 }
 

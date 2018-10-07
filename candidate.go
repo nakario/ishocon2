@@ -27,6 +27,11 @@ type PartyElectionResult struct {
 	VoteCount      int
 }
 
+type CandidateWithVote struct {
+	Candidate
+	VoteCount int
+}
+
 var candidates = []Candidate{
 	Candidate{1, "佐藤 一郎", "夢実現党", "男"},
 	Candidate{2, "佐藤 次郎", "国民10人大活躍党", "女"},
@@ -60,7 +65,38 @@ var candidates = []Candidate{
 	Candidate{30, "伊藤 五郎", "国民元気党", "男"},
 }
 
-
+var VoteCountByCandidateIDMap map[int]int{
+	1:0,
+	2:0,
+	3:0,
+	4:0,
+	5:0,
+	6:0,
+	7:0,
+	8:0,
+	9:0,
+	10:0,
+	11:0,
+	12:0,
+	13:0,
+	14:0,
+	15:0,
+	16:0,
+	17:0,
+	18:0,
+	19:0,
+	20:0,
+	21:0,
+	22:0,
+	23:0,
+	24:0,
+	25:0,
+	26:0,
+	27:0,
+	28:0,
+	29:0,
+	30:0,
+}
 
 
 func getInitAllCandidatesDOM() template.HTML {
@@ -125,28 +161,16 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 	return
 }
 
-func getElectionResult() (result []CandidateElectionResult) {
-	rows, err := db.Query(`
-		SELECT c.id, c.name, c.political_party, c.sex, IFNULL(v.count, 0)
-		FROM candidates AS c
-		LEFT OUTER JOIN
-		(SELECT candidate_id, SUM(cnt) AS count
-	  	FROM votes
-	  	GROUP BY candidate_id) AS v
-		ON c.id = v.candidate_id
-		ORDER BY v.count DESC`)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer rows.Close()
-
-	for rows.Next() {
+func getElectionResult(votemap map[int]int) (result []CandidateElectionResult) {
+	for candidate := range candidates {
 		r := CandidateElectionResult{}
-		err = rows.Scan(&r.ID, &r.Name, &r.PoliticalParty, &r.Sex, &r.VoteCount)
-		if err != nil {
-			panic(err.Error())
-		}
+		r.ID = candidate.ID
+		r.Name = candidate.Name
+		r.PoliticalParty = candidate.PoliticalParty
+		r.Sec = candidate.Sex
+		r.VoteCount = VoteCountByCandidateIDMap[candidate.ID]
 		result = append(result, r)
 	}
+
 	return
 }
