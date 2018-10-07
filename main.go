@@ -162,23 +162,9 @@ func GetVote(c *gin.Context) {
 	})
 }
 
-func GetPostFormArray(c *gin.Context,key string) ([]string, bool) {
-	req := c.Request
-	req.ParseForm()
-	// req.ParseMultipartForm(10)//c.engine.MaxMultipartMemory)
-	if values := req.PostForm[key]; len(values) > 0 {
-		return values, true
-	}
-	// if req.MultipartForm != nil && req.MultipartForm.File != nil {
-	// 	if values := req.MultipartForm.Value[key]; len(values) > 0 {
-	// 		return values, true
-	// 	}
-	// }
-	return []string{}, false
-}
 
 func postForm(c *gin.Context,key string) string {
-	if values, ok := GetPostFormArray(c,key); ok {
+	if values := c.Request.PostForm[key]; len(values) > 0 {
 		return values[0]
 	}
 	return ""
@@ -186,7 +172,8 @@ func postForm(c *gin.Context,key string) string {
 
 
 func PostVote(c *gin.Context) {
-	user, userErr := getUser(c.PostForm("name"), c.PostForm("address"), c.PostForm("mynumber"))
+	c.Request.ParseForm()
+	user, userErr := getUser(postForm(c,"name"), postForm(c,"address"), postForm(c,"mynumber"))
 	candidate, cndErr := getCandidateByName(c.PostForm("candidate"))
 	votedCount := getUserVotedCount(user.ID)
 	voteCount, _ := strconv.Atoi(c.PostForm("vote_count"))
