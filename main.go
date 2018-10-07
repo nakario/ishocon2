@@ -2,12 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"github.com/gin-contrib/pprof"
 	"html/template"
 	"net/http"
 	"os"
 	"sort"
 	"strconv"
+	"sync"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
@@ -16,6 +18,7 @@ import (
 )
 
 var db *sql.DB
+var usersMap map[string]*User
 
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
@@ -24,13 +27,60 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+func loadUsers() {
+	f, err := os.Open("users.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+
+	records, err := r.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, record := range records {
+		id, _ := strconv.Atoi(record[0])
+		votes, _ := strconv.Atoi(record[4])
+		usersMap[record[3]] = &User{id, record[1], record[2], record[3], votes, 0, sync.Mutex{}}
+	}
+
+	rows, err := db.Query("SELECT u.mynumber, v.cnt FROM votes AS v INNER JOIN users as u WHERE v.user_id = u.id")
+	if err != nil && err != sql.ErrNoRows {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var myNumber string
+		var cnt int
+		err := rows.Scan(&myNumber, &cnt)
+		if err != nil {
+			panic(err)
+		}
+
+		user, ok := usersMap[myNumber]
+		if !ok {
+			panic("hoge")
+		}
+
+		// user.L.Lock()
+		user.Voted += cnt
+		// user.L.Unlock()
+	}
+}
+
 func main() {
+
 	// database setting
 	user := getEnv("ISHOCON2_DB_USER", "ishocon")
 	pass := getEnv("ISHOCON2_DB_PASSWORD", "ishocon")
 	dbname := getEnv("ISHOCON2_DB_NAME", "ishocon2")
 	db, _ = sql.Open("mysql", user+":"+pass+"@/"+dbname)
 	db.SetMaxIdleConns(5)
+
+	loadUsers()
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -169,7 +219,9 @@ func GetVote(c *gin.Context) {
 func PostVote(c *gin.Context) {
 	user, userErr := getUser(c.PostForm("name"), c.PostForm("address"), c.PostForm("mynumber"))
 	candidate, cndErr := getCandidateByName(c.PostForm("candidate"))
-	votedCount := getUserVotedCount(user.ID)
+	user.L.Lock()
+	defer user.L.Unlock()
+	votedCount := user.Voted
 	candidatesDOM := getAllCandidatesDOM()
 	voteCount, _ := strconv.Atoi(c.PostForm("vote_count"))
 
@@ -186,6 +238,7 @@ func PostVote(c *gin.Context) {
 		message = "投票理由を記入してください"
 	} else {
 		createVote(user.ID, candidate.ID, c.PostForm("keyword"), voteCount)
+		user.Voted += voteCount
 		message = "投票に成功しました"
 	}
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
@@ -196,6 +249,11 @@ func PostVote(c *gin.Context) {
 
 func GetInitialize(c *gin.Context) {
 	db.Exec("DELETE FROM votes")
+	for _, u := range usersMap {
+		// u.L.Lock()
+		u.Voted = 0
+		// u.L.Unlock()
+	}
 
 	c.String(http.StatusOK, "Finish")
 }
