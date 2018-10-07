@@ -223,9 +223,12 @@ func GetVote(c *gin.Context) {
 func PostVote(c *gin.Context) {
 	user, userErr := getUser(c.PostForm("name"), c.PostForm("address"), c.PostForm("mynumber"))
 	candidate, cndErr := getCandidateByName(c.PostForm("candidate"))
-	user.Lock()
-	defer user.Unlock()
-	votedCount := user.Voted
+	votedCount := 0
+	if user != nil {
+		user.Lock()
+		defer user.Unlock()
+		votedCount = user.Voted
+	}
 	candidatesDOM := getAllCandidatesDOM()
 	voteCount, _ := strconv.Atoi(c.PostForm("vote_count"))
 
