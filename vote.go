@@ -25,10 +25,9 @@ func createVote(userID int, candidateID int, keyword string, cnt int) {
 	voteCount := voteCounts[candidateID-1]
 	atomic.AddInt64(voteCount, int64(cnt))
 
-	car := candidateElectionResults[candidateID]
+	car := candidateElectionResults[candidateID-1]
 	car.Lock()
 	car.VoteCount += cnt
-	candidateElectionResults[candidateID] = car
 	car.Unlock()
 }
 
