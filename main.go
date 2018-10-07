@@ -37,7 +37,7 @@ func main() {
 	r := gin.Default()
 	r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
 
-	for i := 1; i <= 30 {
+	for i := 1; i <= 30; i++ {
 		VoteCountByCandidateIDMap.Store(i, 0)
 	}
 
