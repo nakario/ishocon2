@@ -22,6 +22,7 @@ type CandidateElectionResult struct {
 	PoliticalParty string
 	Sex            string
 	VoteCount      int
+	sync.Mutex
 }
 
 // PartyElectionResult type
@@ -35,7 +36,7 @@ type CandidateWithVote struct {
 	VoteCount int
 }
 
-var candidates = []Candidate{
+var candidates = [30]Candidate{
 	Candidate{1, "佐藤 一郎", "夢実現党", "男"},
 	Candidate{2, "佐藤 次郎", "国民10人大活躍党", "女"},
 	Candidate{3, "佐藤 三郎", "国民10人大活躍党", "女"},
@@ -136,17 +137,14 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 	return
 }
 
+var candidateElectionResults [30]*CandidateElectionResult
+
 func getElectionResult() (result []CandidateElectionResult) {
-	for _, candidate := range candidates {
-		r := CandidateElectionResult{}
-		r.ID = candidate.ID
-		r.Name = candidate.Name
-		r.PoliticalParty = candidate.PoliticalParty
-		r.Sex = candidate.Sex
-		val, _ := VoteCountByCandidateIDMap.Load(candidate.ID)
-		r.VoteCount = val.(int)
-		result = append(result, r)
+	for _, r := range candidateElectionResults {
+		result = append(result, *r)
 	}
-	sort.Slice(result, func(i, j int) bool { return result[i].VoteCount > result[j].VoteCount })
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].VoteCount > result[j].VoteCount
+	})
 	return
 }

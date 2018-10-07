@@ -1,7 +1,8 @@
 package main
+
 import (
-	"net/http"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 var codeA = []byte(`<!DOCTYPE html>
@@ -58,7 +59,7 @@ var codeA = []byte(`<!DOCTYPE html>
               <div class="form-group">
                 <select name="candidate">
 									`)
-var codeB =  []byte(`
+var codeB = []byte(`
                 </select>
               </div>
               <label>投票理由</label>
@@ -84,7 +85,7 @@ var codeC = []byte(`</div>
 </html>
 `)
 
-func WriteVoteHTML(c *gin.Context,message string) {
+func WriteVoteHTML(c *gin.Context, message string) {
 	c.Status(http.StatusOK)
 	c.Writer.Header()["Content-Type"] = []string{"text/html; charset=utf-8"}
 	c.Writer.Write(codeA)
