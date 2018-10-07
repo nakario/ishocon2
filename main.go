@@ -156,12 +156,8 @@ func GetIndex(c *gin.Context) {
 			ratioWomen += r.VoteCount
 		}
 	}
-
-	c.HTML(http.StatusOK, "templates/index.tmpl", gin.H{
-		"candidates": candidates,
-		"parties":    partyResults,
-		"sexRatio":   sexRatio,
-	})
+	//c *gin.Context, candidates []Candidate, ratioMen int, ratioWomen int, partyResults []PartyElectionResult
+	WriteIndexHTML(c,candidates,ratioMen,ratioWomen,partyResults)
 }
 
 func GetCandidateByID(c *gin.Context) {
