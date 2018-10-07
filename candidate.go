@@ -189,7 +189,7 @@ func getElectionResult() (result []CandidateElectionResult) {
 		result = append(result, r)
 	}
 
-	sort.Sort(result)
+	sort.Sort(sort.Reverse(result))
 
 	return
 }
