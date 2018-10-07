@@ -23,7 +23,7 @@ func getUserVotedCount(userID int) (count int) {
 func createVote(userID int, candidateID int, keyword string, cnt int) {
 	db.Exec("INSERT INTO votes (user_id, candidate_id, keyword, cnt) VALUES (?, ?, ?, ?)",
 		userID, candidateID, keyword, cnt)
-	voteCount := VoteCountByCandidateIDMap.Load(candidateId)
+	voteCount, _ := VoteCountByCandidateIDMap.Load(candidateID)
 	VoteCountByCandidateIDMap.Store(candidateID, voteCount+cnt)
 }
 
