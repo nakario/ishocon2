@@ -159,7 +159,7 @@ func GetVote(c *gin.Context) {
 	candidatesDOM := getAllCandidatesDOM()
 
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidates": candidatesDOM,
+		"candidatesdom": candidatesDOM,
 		"message":    "",
 	})
 }
@@ -189,7 +189,7 @@ func PostVote(c *gin.Context) {
 		message = "投票に成功しました"
 	}
 	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidates": candidatesDOM,
+		"candidatesdom": candidatesDOM,
 		"message":    message,
 	})
 }
