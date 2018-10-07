@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"sync"
 	"io/ioutil"
-	"mime"
 	"net/url"
 	"io"
 	"errors"
@@ -275,34 +274,26 @@ func parsePostForm(r *http.Request) (vs url.Values, err error) {
 		err = errors.New("missing form body")
 		return
 	}
-	ct := r.Header.Get("Content-Type")
-	if ct == "" {
-		ct = "application/octet-stream"
+	var reader io.Reader = r.Body
+	maxFormSize := int64(1<<63 - 1)
+	if _, ok := r.Body.(*maxBytesReader); !ok {
+		maxFormSize = int64(10 << 20)
+		reader = io.LimitReader(r.Body, maxFormSize+1)
 	}
-	ct, _, err = mime.ParseMediaType(ct) // !!
-	switch {
-	case ct == "application/x-www-form-urlencoded":
-		var reader io.Reader = r.Body
-		maxFormSize := int64(1<<63 - 1)
-		if _, ok := r.Body.(*maxBytesReader); !ok {
-			maxFormSize = int64(10 << 20)
-			reader = io.LimitReader(r.Body, maxFormSize+1)
-		}
-		b, e := ioutil.ReadAll(reader) // !!!!!
-		if e != nil {
-			if err == nil {
-				err = e
-			}
-			break
-		}
-		if int64(len(b)) > maxFormSize {
-			err = errors.New("http: POST too large")
-			return
-		}
-		vs, e = url.ParseQuery(string(b)) // !!!!!
+	b, e := ioutil.ReadAll(reader) // !!!!!
+	if e != nil {
 		if err == nil {
 			err = e
 		}
+		return
+	}
+	if int64(len(b)) > maxFormSize {
+		err = errors.New("http: POST too large")
+		return
+	}
+	vs, e = url.ParseQuery(string(b)) // !!!!!
+	if err == nil {
+		err = e
 	}
 	return
 }
