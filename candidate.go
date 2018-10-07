@@ -2,6 +2,7 @@ package main
 
 import (
 	"html/template"
+	"errors"
 )
 // Candidate Model
 type Candidate struct {
@@ -71,6 +72,9 @@ func getInitAllCandidatesDOM() template.HTML {
 }
 var getAllCandidatesDOM = getInitAllCandidatesDOM()
 func getCandidate(candidateID int) (c Candidate, err error) {
+	if (candidateID  <= 0 || candidateID >= 30) {
+		err = errors.New("yee")
+	}
 	c = candidates[candidateID - 1]
 	err = nil
 	return
@@ -85,7 +89,13 @@ func initCandidateByNameMap() map[string]Candidate {
 }
 var candidadeByNameMap = initCandidateByNameMap()
 func getCandidateByName(name string) (c Candidate, err error) {
-	return candidadeByNameMap[name],nil
+	c, ok := candidadeByNameMap[name]
+	if !ok {
+		err = errors.New("no candidate")
+	}else {
+		err = nil
+	}
+	return
 }
 
 func getAllPartyName() (partyNames []string) {
