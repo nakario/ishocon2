@@ -279,16 +279,16 @@ func parsePostForm(r *http.Request) (vs url.Values, err error) {
 	if ct == "" {
 		ct = "application/octet-stream"
 	}
-	ct, _, err = mime.ParseMediaType(ct)
+	ct, _, err = mime.ParseMediaType(ct) // !!
 	switch {
 	case ct == "application/x-www-form-urlencoded":
 		var reader io.Reader = r.Body
 		maxFormSize := int64(1<<63 - 1)
 		if _, ok := r.Body.(*maxBytesReader); !ok {
-			maxFormSize = int64(10 << 20) // 10 MB is a lot of text.
+			maxFormSize = int64(10 << 20)
 			reader = io.LimitReader(r.Body, maxFormSize+1)
 		}
-		b, e := ioutil.ReadAll(reader)
+		b, e := ioutil.ReadAll(reader) // !!!!!
 		if e != nil {
 			if err == nil {
 				err = e
@@ -299,7 +299,7 @@ func parsePostForm(r *http.Request) (vs url.Values, err error) {
 			err = errors.New("http: POST too large")
 			return
 		}
-		vs, e = url.ParseQuery(string(b))
+		vs, e = url.ParseQuery(string(b)) // !!!!!
 		if err == nil {
 			err = e
 		}
