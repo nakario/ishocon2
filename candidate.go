@@ -165,13 +165,13 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 	return
 }
 
-func getElectionResult(votemap map[int]int) (result []CandidateElectionResult) {
+func getElectionResult() (result []CandidateElectionResult) {
 	for _, candidate := range candidates {
 		r := CandidateElectionResult{}
 		r.ID = candidate.ID
 		r.Name = candidate.Name
 		r.PoliticalParty = candidate.PoliticalParty
-		r.Sec = candidate.Sex
+		r.Sex = candidate.Sex
 		r.VoteCount = VoteCountByCandidateIDMap[candidate.ID]
 		result = append(result, r)
 	}
