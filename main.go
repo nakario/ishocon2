@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"github.com/gin-contrib/pprof"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -28,6 +29,7 @@ func getEnv(key, fallback string) string {
 }
 
 func loadUsers() {
+	log.Println("Start loading users")
 	usersMap = make(map[string]*User, 4000000)
 	f, err := os.Open("users.csv")
 	if err != nil {
@@ -70,10 +72,11 @@ func loadUsers() {
 		user.Voted += cnt
 		// user.L.Unlock()
 	}
+	log.Println("Finished loading users")
 }
 
 func main() {
-
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	// database setting
 	user := getEnv("ISHOCON2_DB_USER", "ishocon")
 	pass := getEnv("ISHOCON2_DB_PASSWORD", "ishocon")
