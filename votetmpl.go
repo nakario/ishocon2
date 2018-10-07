@@ -85,10 +85,6 @@ var codeC = []byte(`</div>
 `)
 
 func WriteVoteHTML(c *gin.Context,message string) {
-	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
-		"candidatesdom": getAllCandidatesDOM,
-		"message":    message,
-	})
 	c.Status(http.StatusOK)
 	c.Writer.Header()["Content-Type"] = []string{"text/html; charset=utf-8"}
 	c.Writer.Write(codeA)
