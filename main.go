@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/contrib/static"
@@ -118,7 +119,14 @@ func main() {
 
 	r.GET("/initialize", GetInitialize)
 
-	r.RunTLS(":443", "/etc/nginx/ssl/server.crt", "/etc/nginx/ssl/server.key")
+	s := &http.Server{
+		Addr:           ":443",
+		Handler:        r,
+		ReadTimeout:    100 * time.Millisecond,
+		WriteTimeout:   100 * time.Millisecond,
+		MaxHeaderBytes: 1 << 20,
+	}
+	s.ListenAndServeTLS("/etc/nginx/ssl/server.crt", "/etc/nginx/ssl/server.key")
 }
 
 func GetIndex(c *gin.Context) {
