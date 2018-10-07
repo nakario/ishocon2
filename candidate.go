@@ -166,17 +166,19 @@ func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
 	return
 }
 
-func (c CandidateElectionResult) Len() int {
+func (c Results) Len() int {
 	return len(c)
 }
 
-func (c CandidateElectionResult) Swap(i, j int) {
+func (c Results) Swap(i, j int) {
 	c[i], c[j] = c[j], c[i]
 }
 
-func (c CandidateElectionResult) Less(i, j int) bool {
+func (c Results) Less(i, j int) bool {
 	return c[i].VoteCount < c[j].VoteCount
 }
+
+type Results []CandidateElectionResult
 
 func getElectionResult() (result []CandidateElectionResult) {
 	for _, candidate := range candidates {
@@ -188,8 +190,8 @@ func getElectionResult() (result []CandidateElectionResult) {
 		r.VoteCount = VoteCountByCandidateIDMap[candidate.ID]
 		result = append(result, r)
 	}
-
+	result = Results(result)
 	sort.Sort(sort.Reverse(result))
-
+	result = []CandidateElectionResult(result)
 	return
 }
