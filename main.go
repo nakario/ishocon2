@@ -43,10 +43,7 @@ func main() {
 	r.Use(sessions.Sessions("showwin_happy", store))
 
 	funcs := template.FuncMap{"indexPlus1": func(i int) int { return i + 1 }}
-	r.SetHTMLTemplate(template.Must(template.New("main").Funcs(funcs).ParseFiles(layout, "templates/index.tmpl")))
-	r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/candidate.tmpl")))
-	r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/political_party.tmpl")))
-	r.SetHTMLTemplate(template.Must(template.ParseFiles(layout, "templates/vote.tmpl")))
+	r.SetHTMLTemplate(template.Must(template.New("main").Funcs(funcs).ParseFiles(layout, "templates/index.tmpl", "templates/candidate.tmpl", "templates/political_party.tmpl", "templates/vote.tmpl")))
 
 	pprof.Register(r)
 
