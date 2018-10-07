@@ -32,7 +32,7 @@ func main() {
 	db, _ = sql.Open("mysql", user+":"+pass+"@/"+dbname)
 	db.SetMaxIdleConns(5)
 
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Use(static.Serve("/css", static.LocalFile("public/css", true)))
 
