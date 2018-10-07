@@ -123,7 +123,7 @@ func GetCandidateByID(c *gin.Context) {
 	candidateIDs := []int{candidateID}
 	keywords := getVoiceOfSupporter(candidateIDs)
 
-	c.HTML(http.StatusOK, "templates.candidate.tmpl", gin.H{
+	c.HTML(http.StatusOK, "templates/candidate.tmpl", gin.H{
 		"candidate": candidate,
 		"votes":     votes,
 		"keywords":  keywords,
