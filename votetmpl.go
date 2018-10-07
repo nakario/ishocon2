@@ -1,5 +1,10 @@
-{{ define "templates/vote.tmpl" }}
-<!DOCTYPE html>
+package main
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+)
+
+var codeA = []byte(`<!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
@@ -52,7 +57,8 @@
               <label>候補者</label>
               <div class="form-group">
                 <select name="candidate">
-                  {{ .candidatesdom }}
+									`)
+var codeB =  []byte(`
                 </select>
               </div>
               <label>投票理由</label>
@@ -64,7 +70,8 @@
                 <input class="form-control" name="vote_count" value="">
               </div>
 
-              <div class="text-danger">{{ .message }}</div>
+							<div class="text-danger">`)
+var codeC = []byte(`</div>
               <input class="btn btn-lg btn-success btn-block" type="submit" name="vote" value="投票" />
             </fieldset>
           </form>
@@ -75,4 +82,19 @@
 </div>
 </body>
 </html>
-{{ end }}
+`)
+
+func WriteVoteHTML(c *gin.Context,message string) {
+	c.HTML(http.StatusOK, "templates/vote.tmpl", gin.H{
+		"candidatesdom": getAllCandidatesDOM,
+		"message":    message,
+	})
+	c.Status(http.StatusOK)
+	c.Writer.Header()["Content-Type"] = []string{"text/html; charset=utf-8"}
+	c.Writer.Write(codeA)
+	c.Writer.Write([]byte(getAllCandidatesDOM))
+	c.Writer.Write(codeB)
+	c.Writer.Write([]byte(message))
+	c.Writer.Write(codeC)
+	c.Writer.WriteHeaderNow()
+}
