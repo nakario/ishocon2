@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const VotesFile = "/home/ishocon/votes.csv"
+
 // Vote Model
 type Vote struct {
 	ID          int
@@ -54,7 +56,7 @@ func voteManager() {
 		case req := <- insertVoteCh:
 			votes = append(votes, []string{req.myNumber, strconv.Itoa(req.candidateID), strconv.Itoa(req.cnt)})
 		case <- ticker:
-			f, err := os.OpenFile("~/votes.csv", os.O_APPEND, 0777)
+			f, err := os.OpenFile(VotesFile, os.O_APPEND, 0777)
 			if err != nil {
 				log.Println("Failed to open votes.csv:", err)
 			}

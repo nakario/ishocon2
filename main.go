@@ -69,7 +69,7 @@ func initUsers() {
 func loadVotes() {
 	log.Println("Start loading votes")
 
-	f, err := os.Open("~/votes.csv")
+	f, err := os.Open(VotesFile)
 	if err != nil {
 		panic(err)
 	}
@@ -292,7 +292,7 @@ func PostVote(c *gin.Context) {
 }
 
 func GetInitialize(c *gin.Context) {
-	ioutil.WriteFile("~/votes.csv", []byte{}, 0777)
+	ioutil.WriteFile(VotesFile, []byte{}, 0777)
 	for _, u := range usersMap {
 		// u.L.Lock()
 		u.Voted = 0
