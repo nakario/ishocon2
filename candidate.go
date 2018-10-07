@@ -4,6 +4,7 @@ import (
 	"errors"
 	"html/template"
 	"sort"
+	"sync"
 )
 
 // Candidate Model
@@ -67,7 +68,7 @@ var candidates = []Candidate{
 	Candidate{30, "伊藤 五郎", "国民元気党", "男"},
 }
 
-var VoteCountByCandidateIDMap = map[int]int{
+var VoteCountByCandidateIDMap = sync.Map{
 	1:  0,
 	2:  0,
 	3:  0,
@@ -173,7 +174,7 @@ func getElectionResult() (result []CandidateElectionResult) {
 		r.Name = candidate.Name
 		r.PoliticalParty = candidate.PoliticalParty
 		r.Sex = candidate.Sex
-		r.VoteCount = VoteCountByCandidateIDMap[candidate.ID]
+		r.VoteCount = VoteCountByCandidateIDMap.Load(candidate.ID)
 		result = append(result, r)
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].VoteCount > result[j].VoteCount })
