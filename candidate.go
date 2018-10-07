@@ -1,7 +1,8 @@
 package main
 
-import "html/template"
-
+import (
+	"html/template"
+)
 // Candidate Model
 type Candidate struct {
 	ID             int
@@ -25,53 +26,75 @@ type PartyElectionResult struct {
 	VoteCount      int
 }
 
-func getAllCandidatesDOM() template.HTML {
-	rows, err := db.Query("SELECT name FROM candidates")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer rows.Close()
+var candidates = []Candidate{
+	Candidate{1, "佐藤 一郎", "夢実現党", "男"},
+	Candidate{2, "佐藤 次郎", "国民10人大活躍党", "女"},
+	Candidate{3, "佐藤 三郎", "国民10人大活躍党", "女"},
+	Candidate{4, "佐藤 四郎", "国民10人大活躍党", "男"},
+	Candidate{5, "佐藤 五郎", "国民元気党", "女"},
+	Candidate{6, "鈴木 一郎", "国民平和党", "男"},
+	Candidate{7, "鈴木 次郎", "国民元気党", "女"},
+	Candidate{8, "鈴木 三郎", "国民10人大活躍党", "女"},
+	Candidate{9, "鈴木 四郎", "国民元気党", "女"},
+	Candidate{10, "鈴木 五郎", "国民元気党", "女"},
+	Candidate{11, "高橋 一郎", "国民平和党", "男"},
+	Candidate{12, "高橋 次郎", "夢実現党", "男"},
+	Candidate{13, "高橋 三郎", "夢実現党", "男"},
+	Candidate{14, "高橋 四郎", "国民平和党", "女"},
+	Candidate{15, "高橋 五郎", "国民10人大活躍党", "女"},
+	Candidate{16, "田中 一郎", "夢実現党", "男"},
+	Candidate{17, "田中 次郎", "国民平和党", "女"},
+	Candidate{18, "田中 三郎", "夢実現党", "女"},
+	Candidate{19, "田中 四郎", "国民元気党", "男"},
+	Candidate{20, "田中 五郎", "夢実現党", "女"},
+	Candidate{21, "渡辺 一郎", "夢実現党", "女"},
+	Candidate{22, "渡辺 次郎", "国民平和党", "女"},
+	Candidate{23, "渡辺 三郎", "夢実現党", "男"},
+	Candidate{24, "渡辺 四郎", "国民平和党", "女"},
+	Candidate{25, "渡辺 五郎", "国民10人大活躍党", "男"},
+	Candidate{26, "伊藤 一郎", "夢実現党", "女"},
+	Candidate{27, "伊藤 次郎", "国民10人大活躍党", "女"},
+	Candidate{28, "伊藤 三郎", "国民平和党", "女"},
+	Candidate{29, "伊藤 四郎", "国民10人大活躍党", "男"},
+	Candidate{30, "伊藤 五郎", "国民元気党", "男"},
+}
+
+
+
+
+func getInitAllCandidatesDOM() template.HTML {
 	result := ""
-	var name string
-	for rows.Next() {
-		err = rows.Scan(&name)
-		if err != nil {
-			panic(err.Error())
-		}
-		//  <option value="{{ $candidate.Name }}">{{ $candidate.Name }}</option>
-		result += `<option value="` + name + `">` + name + `</option>`
+	for _,candidate := range candidates {
+		result += `<option value="` + candidate.Name + `">` + candidate.Name + `</option>`
 	}
 	return template.HTML(result)
 }
-
+var getAllCandidatesDOM = getInitAllCandidatesDOM()
 func getCandidate(candidateID int) (c Candidate, err error) {
-	row := db.QueryRow("SELECT * FROM candidates WHERE id = ?", candidateID)
-	err = row.Scan(&c.ID, &c.Name, &c.PoliticalParty, &c.Sex)
+	c = candidates[candidateID - 1]
+	err = nil
 	return
 }
 
+func initCandidateByNameMap() map[string]Candidate {
+	result := make(map[string]Candidate)
+	for _,candidate := range candidates {
+		result[candidate.Name] = candidate
+	}
+	return result
+}
+var candidadeByNameMap = initCandidateByNameMap()
 func getCandidateByName(name string) (c Candidate, err error) {
-	row := db.QueryRow("SELECT * FROM candidates WHERE name = ?", name)
-	err = row.Scan(&c.ID, &c.Name, &c.PoliticalParty, &c.Sex)
-	return
+	return candidadeByNameMap[name],nil
 }
 
 func getAllPartyName() (partyNames []string) {
-	rows, err := db.Query("SELECT political_party FROM candidates GROUP BY political_party")
-	if err != nil {
-		panic(err.Error())
+	return []string{
+		"国民10人大活躍党",
+		"国民元気党",
+		"国民平和党",
+		"夢実現党",
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var name string
-		err = rows.Scan(&name)
-		if err != nil {
-			panic(err.Error())
-		}
-		partyNames = append(partyNames, name)
-	}
-	return
 }
 
 func getCandidatesByPoliticalParty(party string) (candidates []Candidate) {
