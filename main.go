@@ -30,8 +30,8 @@ func getEnv(key, fallback string) string {
 }
 
 func initVotes() {
-	for _, i := range voteCounts {
-		atomic.StoreInt64(i, 0)
+	for i := range voteCounts {
+		voteCounts[i] = new(int64)
 	}
 	for i, c := range candidates {
 		car := &CandidateElectionResult{}
