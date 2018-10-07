@@ -1,5 +1,7 @@
 package main
 
+import "html/template"
+
 // Candidate Model
 type Candidate struct {
 	ID             int
@@ -23,13 +25,13 @@ type PartyElectionResult struct {
 	VoteCount      int
 }
 
-func getAllCandidatesDOM() (result string) {
+func getAllCandidatesDOM() template.HTML {
 	rows, err := db.Query("SELECT name FROM candidates")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer rows.Close()
-	result = ""
+	result := ""
 	var name string
 	for rows.Next() {
 		err = rows.Scan(&name)
@@ -39,7 +41,7 @@ func getAllCandidatesDOM() (result string) {
 		//  <option value="{{ $candidate.Name }}">{{ $candidate.Name }}</option>
 		result += `<option value="` + name + `">` + name + `</option>`
 	}
-	return
+	return template.HTML(result)
 }
 
 func getCandidate(candidateID int) (c Candidate, err error) {
