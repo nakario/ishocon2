@@ -47,7 +47,7 @@ func loadUsers() {
 	for _, record := range records {
 		id, _ := strconv.Atoi(record[0])
 		votes, _ := strconv.Atoi(record[4])
-		usersMap[record[3]] = &User{id, record[1], record[2], record[3], votes, 0, new(sync.Mutex)}
+		usersMap[record[3]] = &User{id, record[1], record[2], record[3], votes, 0, sync.Mutex{}}
 	}
 
 	rows, err := db.Query("SELECT u.mynumber, v.cnt FROM votes AS v INNER JOIN users as u WHERE v.user_id = u.id")
@@ -68,9 +68,9 @@ func loadUsers() {
 			panic("hoge")
 		}
 
-		// user.L.Lock()
+		// user.Lock()
 		user.Voted += cnt
-		// user.L.Unlock()
+		// user.Unlock()
 	}
 	log.Println("Finished loading users")
 }
@@ -223,8 +223,8 @@ func GetVote(c *gin.Context) {
 func PostVote(c *gin.Context) {
 	user, userErr := getUser(c.PostForm("name"), c.PostForm("address"), c.PostForm("mynumber"))
 	candidate, cndErr := getCandidateByName(c.PostForm("candidate"))
-	user.L.Lock()
-	defer user.L.Unlock()
+	user.Lock()
+	defer user.Unlock()
 	votedCount := user.Voted
 	candidatesDOM := getAllCandidatesDOM()
 	voteCount, _ := strconv.Atoi(c.PostForm("vote_count"))
